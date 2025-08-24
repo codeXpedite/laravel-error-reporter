@@ -2,8 +2,8 @@
 
 namespace CodeXpedite\ErrorReporter\Commands;
 
-use Illuminate\Console\Command;
 use CodeXpedite\ErrorReporter\Facades\ErrorReporter;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class TestErrorReporterCommand extends Command
@@ -35,13 +35,15 @@ class TestErrorReporterCommand extends Command
             ]
         );
 
-        if (!$config['enabled']) {
+        if (! $config['enabled']) {
             $this->error('Error Reporter is disabled. Set ERROR_REPORTER_ENABLED=true in .env');
+
             return 1;
         }
 
-        if (!$config['webhook_url']) {
+        if (! $config['webhook_url']) {
             $this->error('Webhook URL is not configured. Set ERROR_REPORTER_WEBHOOK_URL in .env');
+
             return 1;
         }
 
@@ -61,7 +63,7 @@ class TestErrorReporterCommand extends Command
     protected function testPayloadGeneration()
     {
         $this->info('Generating test payload...');
-        
+
         try {
             throw new \Exception('This is a test exception from error-reporter:test command');
         } catch (\Exception $e) {
@@ -69,9 +71,9 @@ class TestErrorReporterCommand extends Command
             $reflection = new \ReflectionClass($reporter);
             $method = $reflection->getMethod('preparePayload');
             $method->setAccessible(true);
-            
+
             $payload = $method->invoke($reporter, $e, ['test' => true]);
-            
+
             $this->info('Generated payload:');
             $this->line(json_encode($payload, JSON_PRETTY_PRINT));
         }
@@ -80,20 +82,20 @@ class TestErrorReporterCommand extends Command
     protected function testWebhookConnection()
     {
         $this->info('Testing webhook connection...');
-        
+
         $testPayload = [
             'repository' => config('error-reporter.repository') ?: str_replace('.', '-', parse_url(config('app.url'), PHP_URL_HOST)),
             'issueTitle' => 'Test Error: Connection test from error-reporter:test',
-            'issueTags' => ['test', 'error-reporter', 'hash-test' . substr(md5(time()), 0, 4)],
-            'issueMessage' => "**Test Error**\n\nThis is a test message from the Laravel Error Reporter package.\n\n" .
-                             "**Time:** " . now()->toDateTimeString() . "\n" .
-                             "**Environment:** " . app()->environment() . "\n\n" .
-                             "*This is a test message and can be safely ignored.*"
+            'issueTags' => ['test', 'error-reporter', 'hash-test'.substr(md5(time()), 0, 4)],
+            'issueMessage' => "**Test Error**\n\nThis is a test message from the Laravel Error Reporter package.\n\n".
+                             '**Time:** '.now()->toDateTimeString()."\n".
+                             '**Environment:** '.app()->environment()."\n\n".
+                             '*This is a test message and can be safely ignored.*',
         ];
 
         try {
             $request = Http::timeout(10);
-            
+
             if ($secretKey = config('error-reporter.secret_key')) {
                 $request->withHeaders(['X-Laravel-Secret' => $secretKey]);
             }
@@ -102,21 +104,21 @@ class TestErrorReporterCommand extends Command
 
             if ($response->successful()) {
                 $this->info('✓ Webhook test successful!');
-                $this->line('Response: ' . $response->body());
+                $this->line('Response: '.$response->body());
             } else {
                 $this->error('✗ Webhook test failed!');
-                $this->line('Status: ' . $response->status());
-                $this->line('Response: ' . $response->body());
+                $this->line('Status: '.$response->status());
+                $this->line('Response: '.$response->body());
             }
         } catch (\Exception $e) {
-            $this->error('✗ Connection failed: ' . $e->getMessage());
+            $this->error('✗ Connection failed: '.$e->getMessage());
         }
     }
 
     protected function sendRealTest()
     {
         $this->info('Sending real test exception to webhook...');
-        
+
         try {
             throw new \RuntimeException('Test exception from Laravel Error Reporter - This is a test error that can be safely ignored.');
         } catch (\RuntimeException $e) {

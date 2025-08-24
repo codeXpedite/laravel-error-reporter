@@ -2,8 +2,8 @@
 
 namespace CodeXpedite\ErrorReporter;
 
-use Illuminate\Support\ServiceProvider;
 use CodeXpedite\ErrorReporter\Commands\TestErrorReporterCommand;
+use Illuminate\Support\ServiceProvider;
 
 class ErrorReporterServiceProvider extends ServiceProvider
 {

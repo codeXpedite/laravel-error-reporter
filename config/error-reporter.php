@@ -66,7 +66,7 @@ return [
     |
     */
     'use_queue' => env('ERROR_REPORTER_USE_QUEUE', false),
-    
+
     'queue_name' => env('ERROR_REPORTER_QUEUE', 'default'),
 
     /*
