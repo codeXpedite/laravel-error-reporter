@@ -73,15 +73,21 @@ class ErrorReporter
     protected function shouldReport(\Throwable $exception): bool
     {
         if (!$this->config['enabled']) {
+            Log::debug('Error Reporter: Disabled by configuration');
             return false;
         }
 
         if (!in_array(app()->environment(), $this->config['environments'] ?? ['production'])) {
+            Log::debug('Error Reporter: Not in allowed environment', [
+                'current' => app()->environment(),
+                'allowed' => $this->config['environments'] ?? ['production']
+            ]);
             return false;
         }
 
         foreach ($this->config['ignore'] ?? [] as $ignoredClass) {
             if ($exception instanceof $ignoredClass) {
+                Log::debug('Error Reporter: Exception ignored', ['class' => get_class($exception)]);
                 return false;
             }
         }
@@ -91,6 +97,7 @@ class ErrorReporter
             $cacheKey = 'error_reporter_' . $hashTag;
             
             if (Cache::has($cacheKey)) {
+                Log::debug('Error Reporter: Rate limited', ['hash' => $hashTag]);
                 return false;
             }
 
@@ -99,6 +106,7 @@ class ErrorReporter
             ));
         }
 
+        Log::debug('Error Reporter: Will report exception', ['class' => get_class($exception)]);
         return true;
     }
 

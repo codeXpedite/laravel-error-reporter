@@ -39,11 +39,7 @@ class ErrorReporterServiceProvider extends ServiceProvider
 
     protected function registerExceptionHandler()
     {
-        if (config('error-reporter.enabled') && app()->environment(config('error-reporter.environments', ['production']))) {
-            $this->app['events']->listen(
-                \Illuminate\Log\Events\MessageLogged::class,
-                Listeners\HandleErrorLog::class
-            );
-        }
+        // Event listener'ı kaldırıyoruz çünkü bootstrap/app.php'de zaten handle ediliyor
+        // Böylece çift raporlama olmaz
     }
 }
